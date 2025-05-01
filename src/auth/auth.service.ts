@@ -5,6 +5,7 @@ import { User } from 'src/database/entities/user.entity';
 import { Repository } from 'typeorm';
 import { BcryptService } from 'src/services/bcrypt/bcrypt.service';
 import { JwtService } from '@nestjs/jwt';
+import { UserStatus } from 'src/database/enums/user-status.enum';
 
 @Injectable()
 export class AuthService {
@@ -26,11 +27,15 @@ export class AuthService {
       findUser.passwordHash,
     );
     if (isFound) {
+      if (findUser.status != UserStatus.ACTIVE) {
+        return null;
+      }
       const payload = {
         id: findUser.id,
-        email: findUser.email, // In future add role
+        email: findUser.email,
+        role: findUser.role,
       };
-      return this.jwtService.sign(payload);
+      return { token: this.jwtService.sign(payload) };
     } else {
       return null;
     }
