@@ -1,24 +1,28 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import * as dotenv from 'dotenv';
-import { User } from './database/entities/user.entity';
-
-const envFile = process.env.NODE_ENV === 'test' ? '.env.test' : '.env';
-dotenv.config({ path: envFile });
+import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { AuthModule } from './auth/auth.module';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import typeorm from './config/typeorm';
+import { BcryptModule } from './services/bcrypt/bcrypt.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: process.env.DB_HOST,
-      port: parseInt(process.env.DB_PORT ?? '5432', 10),
-      username: process.env.DB_USERNAME,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_DATABASE,
-      synchronize: true,
-      logging: false,
-      entities: [User],
+    ConfigModule.forRoot({
+      isGlobal: true,
+      load: [typeorm],
     }),
+    TypeOrmModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService): TypeOrmModuleOptions => {
+        const config = configService.get<TypeOrmModuleOptions>('typeorm');
+        if (!config) {
+          throw new Error('TypeORM config not found');
+        }
+        return config;
+      },
+    }),
+    AuthModule,
+    BcryptModule,
   ],
 })
 export class AppModule {}

@@ -1,22 +1,28 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
-@Entity('users') // Имя таблицы в базе данных (можно оставить по умолчанию, если нужно)
+@Entity('users')
 export class User {
-  @PrimaryGeneratedColumn() // Первичный ключ
+  @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'varchar', length: 255 }) // Поле для имени
-  name: string;
+  @Column({ type: 'varchar', length: 255 })
+  username: string;
 
-  @Column({ type: 'varchar', length: 255, unique: true }) // Поле для email с уникальностью
+  @Column({ type: 'varchar', length: 255, unique: true })
   email: string;
 
-  @Column({ type: 'varchar', length: 255 }) // Поле для пароля
-  password: string;
+  @Column({ type: 'varchar', length: 255 })
+  passwordHash: string;
 
-  @CreateDateColumn() // Дата создания записи
+  @CreateDateColumn()
   createdAt: Date;
 
-  @UpdateDateColumn() // Дата последнего обновления записи
+  @UpdateDateColumn()
   updatedAt: Date;
 }
