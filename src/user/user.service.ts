@@ -13,12 +13,15 @@ import { BlockUserDto } from './dto/block-user.dto';
 import { UserStatus } from 'src/database/enums/user-status.enum';
 import { BcryptService } from 'src/services/bcrypt/bcrypt.service';
 import { Profile } from './representors/profile.repr';
+import { Wallet } from 'src/database/entities/wallet.entity';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
+    @InjectRepository(Wallet)
+    private readonly walletRepo: Repository<Wallet>,
     private readonly bcryptService: BcryptService,
   ) {}
 
@@ -38,6 +41,12 @@ export class UserService {
 
     const user = this.userRepo.create(dto);
     user.passwordHash = await this.bcryptService.hash(dto.password);
+
+    const wallet = await this.walletRepo.save(
+      this.walletRepo.create({ balance: 0.0 }),
+    );
+    user.wallet = wallet;
+
     return await this.userRepo.save(user);
   }
 

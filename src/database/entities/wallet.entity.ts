@@ -1,10 +1,4 @@
-import {
-  Column,
-  Entity,
-  JoinColumn,
-  OneToOne,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { User } from './user.entity';
 
 @Entity('wallets')
@@ -16,6 +10,7 @@ export class Wallet {
     type: 'decimal',
     precision: 10,
     scale: 2,
+    default: 0.0,
     transformer: {
       to: (value: number) => value,
       from: (value: string) => parseFloat(value),
@@ -24,6 +19,5 @@ export class Wallet {
   balance: number;
 
   @OneToOne(() => User, (user) => user.wallet, { onDelete: 'CASCADE' })
-  @JoinColumn()
   user: User;
 }
