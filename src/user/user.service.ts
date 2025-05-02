@@ -2,7 +2,6 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
-  NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/database/entities/user.entity';
@@ -76,20 +75,21 @@ export class UserService {
       if (foundUser) {
         throw new ConflictException('User with this email already exists');
       }
+      user.email = dto.email;
     }
     if (dto.username && dto.username !== user.username) {
       const foundUser = await this.userRepo.findOne({
-        where: { email: dto.username },
+        where: { username: dto.username },
       });
       if (foundUser) {
         throw new ConflictException('User with this username already exists');
       }
+      user.username = dto.username;
     }
     if (dto.password) {
       user.passwordHash = await this.bcryptService.hash(dto.password);
     }
 
-    Object.assign(user, dto);
     const newUser = await this.userRepo.save(user);
     return new Profile(
       newUser.username,
@@ -101,7 +101,7 @@ export class UserService {
 
   async profile(id: string): Promise<Profile> {
     const user = await this.findById(id);
-    if (!user) throw new NotFoundException('User not found');
+    if (!user) throw new BadRequestException('User not found');
     const profile = new Profile(
       user.username,
       user.email,

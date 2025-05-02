@@ -1,7 +1,3 @@
-import * as dotenv from 'dotenv';
-// Explicitly load test environment
-dotenv.config({ path: '.env.test' });
-
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
@@ -13,6 +9,9 @@ import { User } from '../src/database/entities/user.entity';
 import { UserStatus } from 'src/database/enums/user-status.enum';
 import { JwtService } from '@nestjs/jwt';
 import { Server } from 'http';
+
+import * as dotenv from 'dotenv';
+dotenv.config({ path: '.env.test' });
 
 const rolesGuardMock = { canActivate: () => true };
 
@@ -107,7 +106,7 @@ describe('User Module (e2e with real JWT)', () => {
   it('/user/update (PATCH) - should update username with real JWT', () => {
     const dto = { username: 'updatedUser' };
     return request(server)
-      .patch('/user/update')
+      .patch('/user')
       .set('Authorization', `Bearer ${jwtToken}`)
       .send(dto)
       .expect(200)

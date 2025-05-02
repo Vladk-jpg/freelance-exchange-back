@@ -5,7 +5,6 @@ import {
   JoinColumn,
   ManyToOne,
   OneToMany,
-  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -45,7 +44,7 @@ export class Project {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @OneToOne(() => Category)
+  @ManyToOne(() => Category)
   @JoinColumn()
   category: Category;
 
@@ -60,5 +59,5 @@ export class Project {
   freelancer: User;
 
   @OneToMany(() => Proposal, (proposal) => proposal.project)
-  proposals: [];
+  proposals: Proposal[];
 }

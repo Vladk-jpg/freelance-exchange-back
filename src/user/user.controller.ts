@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Param,
   Patch,
   Post,
   Req,
@@ -34,14 +35,14 @@ export class UserController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('user-profile')
-  async getUserProfile(@Body('id') id: string) {
+  @Get('profile/:id')
+  async getUserProfile(@Param('id') id: string) {
     return await this.userService.findProfile(id);
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('user')
-  async getUserById(@Body('id') id: string) {
+  @Get(':id')
+  async getUserById(@Param('id') id: string) {
     return await this.userService.findById(id);
   }
 
@@ -52,7 +53,7 @@ export class UserController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Patch('update')
+  @Patch()
   async updateUser(@Req() req: any, @Body() dto: UpdateUserDto) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     return await this.userService.update(req.user.id as string, dto);
@@ -81,8 +82,8 @@ export class UserController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
-  @Delete('delete')
-  async deleteUser(@Body('id') id: string) {
+  @Delete(':id')
+  async deleteUser(@Param('id') id: string) {
     await this.userService.delete(id);
     return { message: 'OK' };
   }
