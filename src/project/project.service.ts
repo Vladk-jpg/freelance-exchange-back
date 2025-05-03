@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import {
   BadRequestException,
   ForbiddenException,
@@ -6,7 +7,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Project } from 'src/database/entities/project.entity';
 import { User } from 'src/database/entities/user.entity';
-import { ILike, Repository } from 'typeorm';
+import { ILike, In, Repository } from 'typeorm';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { Category } from 'src/database/entities/category.entity';
 import { UpdateProjectDto } from './dto/update-project.dto';
@@ -72,18 +73,10 @@ export class ProjectService {
     return await this.projectRepo.findOne({ where: { id: projectId } });
   }
 
-  // Write filter for finding particular projects
-  /*
-  {
-    "categories": [*array with categories*],
-    "sortBy": property for sorting
-  }
-  */
-
   async findByUserId(userId: string) {
     return await this.projectRepo.find({
       where: [{ client: { id: userId } }, { freelancer: { id: userId } }],
-      relations: ['user'],
+      relations: ['client', 'freelancer'],
     });
   }
 
@@ -103,6 +96,7 @@ export class ProjectService {
       skip: offset,
       take: limit,
       order: { createdAt: 'DESC' },
+      relations: ['category'],
     });
 
     return {
@@ -131,6 +125,7 @@ export class ProjectService {
       order: {
         createdAt: 'DESC',
       },
+      relations: ['category'],
     });
 
     return { data: projects, total, limit, offset };
@@ -139,40 +134,41 @@ export class ProjectService {
   async filterProjects(dto: FilterProjectsDto) {
     const { categories, sortBy, offset = 0, limit = 10 } = dto;
 
-    let query = this.projectRepo.createQueryBuilder('project');
+    // 1) Общее число
+    const total = await this.projectRepo.count({
+      where: categories?.length ? { category: In(categories) } : {},
+    });
 
-    if (categories?.length) {
-      query = query.andWhere('project.categoryId IN (:...categories)', {
-        categories,
-      });
-    }
-
-    switch (sortBy) {
-      case ProjectSort.OLDEST:
-        query = query.orderBy('project.createdAt', 'ASC');
-        break;
-      case ProjectSort.RANDOM:
-        query = query.orderBy('RANDOM()');
-        break;
-      case ProjectSort.CHEAPEST:
-        query = query.orderBy('project.price', 'ASC');
-        break;
-      case ProjectSort.MOST_EXPENSIVE:
-        query = query.orderBy('project.price', 'DESC');
-        break;
-      default:
-        query = query.orderBy('project.createdAt', 'DESC');
-    }
-
-    query = query.skip(offset).take(limit);
-
-    const [projects, total] = await query.getManyAndCount();
-
-    return {
-      data: projects,
-      total,
-      offset,
-      limit,
+    // 2) Выборка с relations
+    // Собираем опции для find():
+    const findOpts: any = {
+      relations: ['category'], // <-- подгружаем связь
+      where: categories?.length ? { category: In(categories) } : {},
+      skip: offset,
+      take: limit,
+      order: {},
     };
+
+    // Динамическая сортировка (без RANDOM, оно не поддерживается в find())
+    if (sortBy === ProjectSort.OLDEST) {
+      findOpts.order = { createdAt: 'ASC' };
+    } else if (sortBy === ProjectSort.CHEAPEST) {
+      findOpts.order = { price: 'ASC' };
+    } else if (sortBy === ProjectSort.MOST_EXPENSIVE) {
+      findOpts.order = { price: 'DESC' };
+    } else {
+      // recent по умолчанию
+      findOpts.order = { createdAt: 'DESC' };
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    let data = await this.projectRepo.find(findOpts);
+
+    // Если нужна случайная сортировка:
+    if (sortBy === ProjectSort.RANDOM) {
+      data = data.sort(() => Math.random() - 0.5);
+    }
+
+    return { data, total, offset, limit };
   }
 }

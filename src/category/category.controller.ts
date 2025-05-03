@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Param,
   Patch,
   Post,
   UseGuards,
@@ -15,22 +16,24 @@ import { UserRole } from 'src/database/enums/user-role.enum';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 
 @Controller('category')
-@UseGuards(JwtAuthGuard, RolesGuard)
 export class CategoryController {
   constructor(private categoryService: CategoryService) {}
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @Post()
   async createCategory(@Body('name') name: string) {
     return await this.categoryService.create(name);
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @Patch()
   async updateCategory(@Body() dto: UpdateCategoryDto) {
     return await this.categoryService.update(dto);
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @Delete()
   async deleteCategory(@Body('id') id: string) {
@@ -38,13 +41,13 @@ export class CategoryController {
     return { message: 'OK' };
   }
 
-  @Get('all')
+  @Get()
   async getAllCategories() {
     return await this.categoryService.findAll();
   }
 
-  @Get()
-  async getCategory(@Body('id') id: string) {
+  @Get(':id')
+  async getCategory(@Param('id') id: string) {
     return await this.categoryService.findById(id);
   }
 }

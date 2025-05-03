@@ -15,7 +15,7 @@ dotenv.config({ path: '.env.test' });
 
 const rolesGuardMock = { canActivate: () => true };
 
-describe('User Module (e2e with real JWT)', () => {
+describe('User Module (e2e with JWT)', () => {
   let app: INestApplication;
   let server: Server;
   let testUserId: string;

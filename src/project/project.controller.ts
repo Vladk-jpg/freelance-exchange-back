@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  NotFoundException,
   Param,
   Patch,
   Post,
@@ -20,6 +21,7 @@ import { PaginationDto } from './dto/pagination.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { SearchProjectsDto } from './dto/search-project.dto';
 import { FilterProjectsDto } from './dto/filter-projects.dto';
+import { UUIDParam } from 'src/common/pipes/uuid.pipe';
 
 @Controller('project')
 export class ProjectController {
@@ -44,8 +46,10 @@ export class ProjectController {
   }
 
   @Get(':id')
-  async getProjectById(@Param('id') id: string) {
-    return await this.projectService.findById(id);
+  async getProjectById(@Param('id', UUIDParam()) id: string) {
+    const res = await this.projectService.findById(id);
+    if (!res) throw new NotFoundException('Project with such id not found');
+    return res;
   }
 
   @Get()
@@ -54,7 +58,7 @@ export class ProjectController {
   }
 
   @Get('user/:id')
-  async getProjectsByUserId(@Param('id') id: string) {
+  async getProjectsByUserId(@Param('id', UUIDParam()) id: string) {
     return await this.projectService.findByUserId(id);
   }
 
@@ -62,7 +66,7 @@ export class ProjectController {
   @Roles(UserRole.CLIENT)
   @Patch(':id')
   async updateProject(
-    @Param('id') projectId: string,
+    @Param('id', UUIDParam()) projectId: string,
     @Req() req: any,
     @Body() dto: UpdateProjectDto,
   ) {
@@ -77,7 +81,10 @@ export class ProjectController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.CLIENT)
   @Delete(':id')
-  async deleteProject(@Param('id') projectId: string, @Req() req: any) {
+  async deleteProject(
+    @Param('id', UUIDParam()) projectId: string,
+    @Req() req: any,
+  ) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     await this.projectService.delete(req.user.id as string, projectId);
     return { message: 'OK' };
