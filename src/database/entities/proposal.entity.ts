@@ -1,5 +1,6 @@
 import {
   Column,
+  CreateDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
@@ -19,6 +20,9 @@ export class Proposal {
 
   @Column({ type: 'text', default: ProposalStatus.PENDING })
   status: ProposalStatus;
+
+  @CreateDateColumn()
+  createdAt: Date;
 
   @ManyToOne(() => Project, (project) => project.proposals, {
     onDelete: 'CASCADE',

@@ -7,6 +7,7 @@ import { BcryptModule } from './services/bcrypt/bcrypt.module';
 import { UserModule } from './user/user.module';
 import { ProjectModule } from './project/project.module';
 import { CategoryModule } from './category/category.module';
+import { ProposalModule } from './proposal/proposal.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { CategoryModule } from './category/category.module';
     UserModule,
     ProjectModule,
     CategoryModule,
+    ProposalModule,
   ],
 })
 export class AppModule {}

@@ -84,7 +84,7 @@ export class ProjectService {
     await this.checkAffilation(userId, projectId);
     const result = await this.projectRepo.delete(projectId);
     if (result.affected === 0) {
-      throw new BadRequestException('Can not delete user or user not found');
+      throw new BadRequestException('Can not delete project');
     }
   }
 
