@@ -90,7 +90,7 @@ describe('User Module (e2e with JWT)', () => {
     expect(res.status).toBe(409);
   });
 
-  it('/user/profile (GET) - should return profile with real JWT', () => {
+  it('/user/profile (GET) - should return profile', () => {
     return request(server)
       .get('/user/profile')
       .set('Authorization', `Bearer ${jwtToken}`)
@@ -103,7 +103,7 @@ describe('User Module (e2e with JWT)', () => {
       });
   });
 
-  it('/user/update (PATCH) - should update username with real JWT', () => {
+  it('/user/update (PATCH) - should update username', () => {
     const dto = { username: 'updatedUser' };
     return request(server)
       .patch('/user')

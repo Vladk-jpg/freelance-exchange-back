@@ -89,4 +89,52 @@ export class ProjectController {
     await this.projectService.delete(req.user.id as string, projectId);
     return { message: 'OK' };
   }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.FREELANCER)
+  @Patch('send-approval/:id')
+  async sendApproval(
+    @Param('id', UUIDParam()) projectId: string,
+    @Req() req: any,
+  ) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    await this.projectService.sendApproval(req.user.id as string, projectId);
+    return { message: 'OK' };
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.CLIENT)
+  @Patch('approve/:id')
+  async approveProject(
+    @Param('id', UUIDParam()) projectId: string,
+    @Req() req: any,
+  ) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    await this.projectService.approve(req.user.id as string, projectId);
+    return { message: 'OK' };
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.CLIENT)
+  @Patch('cancel/:id')
+  async cancelProject(
+    @Param('id', UUIDParam()) projectId: string,
+    @Req() req: any,
+  ) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    await this.projectService.cancelApproval(req.user.id as string, projectId);
+    return { message: 'OK' };
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.CLIENT)
+  @Patch('refund/:id')
+  async refundProject(
+    @Param('id', UUIDParam()) projectId: string,
+    @Req() req: any,
+  ) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    await this.projectService.refund(req.user.id as string, projectId);
+    return { message: 'OK' };
+  }
 }

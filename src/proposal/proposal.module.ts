@@ -6,9 +6,12 @@ import { Proposal } from 'src/database/entities/proposal.entity';
 import { Project } from 'src/database/entities/project.entity';
 import { User } from 'src/database/entities/user.entity';
 import { Wallet } from 'src/database/entities/wallet.entity';
+import { Payment } from 'src/database/entities/payment.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, Project, Proposal, Wallet])],
+  imports: [
+    TypeOrmModule.forFeature([User, Project, Proposal, Wallet, Payment]),
+  ],
   providers: [ProposalService],
   controllers: [ProposalController],
 })

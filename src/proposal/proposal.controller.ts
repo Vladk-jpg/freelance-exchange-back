@@ -97,4 +97,9 @@ export class ProposalController {
       projectId,
     );
   }
+
+  @Get(':id')
+  async findProposalById(@Param('id', UUIDParam()) proposalId: string) {
+    return await this.proposalService.findById(proposalId);
+  }
 }

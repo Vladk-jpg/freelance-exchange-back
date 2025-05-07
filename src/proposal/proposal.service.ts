@@ -15,6 +15,7 @@ import { ProposalStatus } from 'src/database/enums/proposal-status.enum';
 import { UpdateProposalDto } from './dto/update-proposal.dto';
 import { UserStatus } from 'src/database/enums/user-status.enum';
 import { Wallet } from 'src/database/entities/wallet.entity';
+import { Payment } from 'src/database/entities/payment.entity';
 
 @Injectable()
 export class ProposalService {
@@ -27,6 +28,8 @@ export class ProposalService {
     private readonly propRepo: Repository<Proposal>,
     @InjectRepository(Wallet)
     private readonly walletRepo: Repository<Wallet>,
+    @InjectRepository(Payment)
+    private readonly paymentRepo: Repository<Payment>,
   ) {}
 
   private async checkAffilation(userId: string, proposalId: string) {
@@ -37,29 +40,29 @@ export class ProposalService {
     if (!proposal)
       throw new NotFoundException('Proposal with such id not found');
     if (proposal.freelancer.id !== userId)
-      throw new ForbiddenException('You can not access to this proposal');
+      throw new ForbiddenException('You do not have access to this proposal');
     return proposal;
   }
 
   async create(userId: string, dto: CreateProposalDto) {
     const freelancer = await this.userRepo.findOne({ where: { id: userId } });
     if (!freelancer) throw new NotFoundException('User not found');
-
-    const found = await this.propRepo.findOne({
-      where: { freelancer: { id: freelancer.id } },
-      relations: ['freelancer'],
-    });
-    if (found)
-      throw new ForbiddenException(
-        'You have already sent proposal to this project!',
-      );
-
     const project = await this.projectRepo.findOne({
       where: { id: dto.projectId },
     });
     if (!project) throw new NotFoundException('Project not found');
     if (project.status != ProjectStatus.CREATED)
       throw new BadRequestException('Project is not available');
+
+    const found = await this.propRepo.findOne({
+      where: { freelancer: { id: freelancer.id }, project: { id: project.id } },
+      relations: ['freelancer', 'project'],
+    });
+    if (found) {
+      throw new ForbiddenException(
+        'You have already sent proposal to this project!',
+      );
+    }
 
     const proposal = this.propRepo.create();
     proposal.message = dto.message;
@@ -150,7 +153,12 @@ export class ProposalService {
     await this.projectRepo.save(project);
     await this.walletRepo.save(user.wallet);
 
-    //In future create payment
+    const payment = this.paymentRepo.create();
+    payment.projectId = project.id;
+    payment.senderId = user.id;
+    payment.recepientId = proposal.freelancer.id;
+    payment.amount = project.price;
+    await this.paymentRepo.save(payment);
   }
 
   async rejectProposal(userId: string, proposalId: string) {
@@ -170,5 +178,13 @@ export class ProposalService {
 
     proposal.status = ProposalStatus.REJECTED;
     await this.propRepo.save(proposal);
+  }
+
+  async findById(proposalId: string) {
+    const proposal = await this.propRepo.findOne({
+      where: { id: proposalId },
+    });
+    if (!proposal) throw new NotFoundException('Proposal not found');
+    return proposal;
   }
 }

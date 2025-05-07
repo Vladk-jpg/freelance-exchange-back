@@ -18,6 +18,9 @@ export class Payment {
   @Column({ type: 'uuid' })
   recepientId: string;
 
+  @Column({ type: 'uuid' })
+  projectId: string;
+
   @Column({
     type: 'decimal',
     precision: 10,
@@ -37,6 +40,7 @@ export class Payment {
       to: (value: number) => value,
       from: (value: string) => parseFloat(value),
     },
+    default: 0,
   })
   commission: number;
 
