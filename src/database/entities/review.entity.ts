@@ -2,6 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
@@ -15,13 +16,14 @@ export class Review {
   @Column({ type: 'text' })
   comment: string;
 
-  @Column()
+  @Column({ type: 'int', nullable: false })
   rating: number;
 
   @Column({ type: 'uuid' })
   senderId: string;
 
   @ManyToOne(() => User, (user) => user.reviews)
+  @JoinColumn()
   recepient: User;
 
   @CreateDateColumn()
