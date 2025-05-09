@@ -8,6 +8,8 @@ import {
   Post,
   Req,
   UseGuards,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
 import { RolesGuard } from 'src/common/guards/roles.guard';
@@ -17,6 +19,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { UserRole } from 'src/database/enums/user-role.enum';
 import { BlockUserDto } from './dto/block-user.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('user')
 export class UserController {
@@ -86,5 +89,23 @@ export class UserController {
   async deleteUser(@Param('id') id: string) {
     await this.userService.delete(id);
     return { message: 'OK' };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('upload-profile-picture')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadProfilePicture(
+    @Req() req: any,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    if (!file) {
+      throw new Error('No file uploaded');
+    }
+    return await this.userService.uploadProfilePicture(
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      req.user.id as string,
+      file.buffer,
+      file.originalname,
+    );
   }
 }

@@ -35,6 +35,9 @@ export class User {
   @Column({ type: 'text', default: UserStatus.ACTIVE })
   status: UserStatus;
 
+  @Column({ nullable: true, default: '' })
+  profilePicture?: string;
+
   @CreateDateColumn()
   createdAt: Date;
 

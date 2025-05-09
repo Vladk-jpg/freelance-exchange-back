@@ -19,6 +19,7 @@ import { ProjectSort } from './enums/project-sort.enum';
 import { Payment } from 'src/database/entities/payment.entity';
 import { PaymentStatus } from 'src/database/enums/payment-status.enum';
 import { Wallet } from 'src/database/entities/wallet.entity';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class ProjectService {
@@ -33,6 +34,7 @@ export class ProjectService {
     private readonly paymentRepo: Repository<Payment>,
     @InjectRepository(Wallet)
     private readonly walletRepo: Repository<Wallet>,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   private async checkAffilation(userId: string, projectId: string) {
@@ -59,7 +61,15 @@ export class ProjectService {
     project.price = parseFloat(dto.price);
     project.category = category;
     project.client = user;
-    return await this.projectRepo.save(project);
+    const saved = await this.projectRepo.save(project);
+
+    this.eventEmitter.emit('notification.create', {
+      userId: userId,
+      title: 'New project created',
+      body: `Project ${project.title} created`,
+    });
+
+    return saved;
   }
 
   async update(projectId: string, userId: string, dto: UpdateProjectDto) {

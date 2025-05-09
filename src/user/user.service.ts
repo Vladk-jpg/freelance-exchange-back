@@ -13,6 +13,7 @@ import { UserStatus } from 'src/database/enums/user-status.enum';
 import { BcryptService } from 'src/services/bcrypt/bcrypt.service';
 import { Profile } from './representors/profile.repr';
 import { Wallet } from 'src/database/entities/wallet.entity';
+import { MinioService } from 'src/minio/minio.service';
 
 @Injectable()
 export class UserService {
@@ -22,6 +23,7 @@ export class UserService {
     @InjectRepository(Wallet)
     private readonly walletRepo: Repository<Wallet>,
     private readonly bcryptService: BcryptService,
+    private readonly minioService: MinioService,
   ) {}
 
   async create(dto: CreateUserDto): Promise<User> {
@@ -60,7 +62,13 @@ export class UserService {
   async findProfile(id: string): Promise<Profile | null> {
     const user = await this.userRepo.findOne({ where: { id } });
     if (!user) return null;
-    return new Profile(user.username, user.email, user.role, user.createdAt);
+    return new Profile(
+      user.username,
+      user.email,
+      user.role,
+      user.createdAt,
+      user.profilePicture,
+    );
   }
 
   async update(id: string, dto: UpdateUserDto): Promise<Profile> {
@@ -96,6 +104,7 @@ export class UserService {
       newUser.email,
       newUser.role,
       newUser.createdAt,
+      newUser.profilePicture,
     );
   }
 
@@ -107,6 +116,7 @@ export class UserService {
       user.email,
       user.role,
       user.createdAt,
+      user.profilePicture,
     );
     return profile;
   }
@@ -143,5 +153,34 @@ export class UserService {
     }
     user.status = UserStatus.DELETED;
     await this.userRepo.save(user);
+  }
+
+  async uploadProfilePicture(
+    userId: string,
+    fileBuffer: Buffer,
+    fileName: string,
+  ): Promise<Profile> {
+    const user = await this.findById(userId);
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+
+    const bucketName = 'profile-pictures';
+    await this.minioService.ensureBucket(bucketName);
+
+    const objectName = `${userId}/${fileName}`;
+    await this.minioService.upload(bucketName, objectName, fileBuffer);
+
+    const publicUrl = this.minioService.getPublicUrl(bucketName, objectName);
+    user.profilePicture = publicUrl;
+
+    const updatedUser = await this.userRepo.save(user);
+    return new Profile(
+      updatedUser.username,
+      updatedUser.email,
+      updatedUser.role,
+      updatedUser.createdAt,
+      updatedUser.profilePicture,
+    );
   }
 }

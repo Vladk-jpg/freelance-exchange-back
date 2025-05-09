@@ -6,5 +6,6 @@ export class Profile {
     public email: string,
     public role: UserRole,
     public createdAt: Date,
+    public profilePicture?: string,
   ) {}
 }
