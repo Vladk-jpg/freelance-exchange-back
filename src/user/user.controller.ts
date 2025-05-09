@@ -98,11 +98,7 @@ export class UserController {
     @Req() req: any,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    if (!file) {
-      throw new Error('No file uploaded');
-    }
     return await this.userService.uploadProfilePicture(
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       req.user.id as string,
       file.buffer,
       file.originalname,

@@ -36,7 +36,6 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
         uri: 'mongodb://localhost/27017',
       }),
     }),
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     EventEmitterModule.forRoot(),
     AuthModule,
     BcryptModule,

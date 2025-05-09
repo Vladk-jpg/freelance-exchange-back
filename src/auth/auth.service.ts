@@ -35,7 +35,7 @@ export class AuthService {
         email: findUser.email,
         role: findUser.role,
       };
-      return { token: this.jwtService.sign(payload) };
+      return { token: this.jwtService.sign(payload), role: findUser.role };
     } else {
       return null;
     }
