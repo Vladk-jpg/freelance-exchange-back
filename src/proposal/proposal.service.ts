@@ -16,6 +16,7 @@ import { UpdateProposalDto } from './dto/update-proposal.dto';
 import { UserStatus } from 'src/database/enums/user-status.enum';
 import { Wallet } from 'src/database/entities/wallet.entity';
 import { Payment } from 'src/database/entities/payment.entity';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class ProposalService {
@@ -30,6 +31,7 @@ export class ProposalService {
     private readonly walletRepo: Repository<Wallet>,
     @InjectRepository(Payment)
     private readonly paymentRepo: Repository<Payment>,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   private async checkAffilation(userId: string, proposalId: string) {
@@ -49,6 +51,7 @@ export class ProposalService {
     if (!freelancer) throw new NotFoundException('User not found');
     const project = await this.projectRepo.findOne({
       where: { id: dto.projectId },
+      relations: ['client'],
     });
     if (!project) throw new NotFoundException('Project not found');
     if (project.status != ProjectStatus.CREATED)
@@ -68,6 +71,12 @@ export class ProposalService {
     proposal.message = dto.message;
     proposal.project = project;
     proposal.freelancer = freelancer;
+
+    this.eventEmitter.emit('notification.create', {
+      userId: project.client.id,
+      title: 'Новая заявка!',
+      body: `Новая заявка на проект ${project.title}. Проверьте на страницу с проектом `,
+    });
 
     return await this.propRepo.save(proposal);
   }
@@ -159,12 +168,18 @@ export class ProposalService {
     payment.recepientId = proposal.freelancer.id;
     payment.amount = project.price;
     await this.paymentRepo.save(payment);
+
+    this.eventEmitter.emit('notification.create', {
+      userId: proposal.freelancer.id,
+      title: 'Заявка одобрена',
+      body: `Ваша заявка на преокт ${project.title} одобрена! Можете приступать к работе в течении 24 часов`,
+    });
   }
 
   async rejectProposal(userId: string, proposalId: string) {
     const proposal = await this.propRepo.findOne({
       where: { id: proposalId },
-      relations: ['project'],
+      relations: ['project', 'freelancer'],
     });
     if (!proposal) throw new NotFoundException('Proposal not found');
     if (proposal.status != ProposalStatus.PENDING)
@@ -178,6 +193,12 @@ export class ProposalService {
 
     proposal.status = ProposalStatus.REJECTED;
     await this.propRepo.save(proposal);
+
+    this.eventEmitter.emit('notification.create', {
+      userId: proposal.freelancer.id,
+      title: 'Заявка отказана',
+      body: `Вашей заявкае на преокт ${project.title} отказано`,
+    });
   }
 
   async findById(proposalId: string) {

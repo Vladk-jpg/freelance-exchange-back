@@ -186,7 +186,7 @@ export class ProjectService {
   async sendApproval(userId: string, projectId: string) {
     const project = await this.projectRepo.findOne({
       where: { id: projectId },
-      relations: ['freelancer'],
+      relations: ['freelancer', 'client'],
     });
     if (!project) throw new BadRequestException('Project not found');
     if (project.freelancer.id !== userId)
@@ -195,6 +195,12 @@ export class ProjectService {
       );
     project.status = ProjectStatus.AWAITING_APPROVAL;
     await this.projectRepo.save(project);
+
+    this.eventEmitter.emit('notification.create', {
+      userId: project.client.id,
+      title: 'Проект нуждается в подтверждении',
+      body: `Фрилансер ${project.freelancer.username} хочет подтвердить выполнение проекта ${project.title}`,
+    });
   }
 
   async approve(userId: string, projectId: string) {
@@ -222,6 +228,12 @@ export class ProjectService {
 
     project.status = ProjectStatus.COMPLETED;
     await this.projectRepo.save(project);
+
+    this.eventEmitter.emit('notification.create', {
+      userId: freelancer.id,
+      title: 'Подтверждено',
+      body: `Ваша работа подтверждена! Проверьте ваш кошелек`,
+    });
   }
 
   async refund(userId: string, projectId: string) {
@@ -251,6 +263,12 @@ export class ProjectService {
     await this.paymentRepo.save(payment);
     project.status = ProjectStatus.CANCELLED;
     await this.projectRepo.save(project);
+
+    this.eventEmitter.emit('notification.create', {
+      userId: payment.recepientId,
+      title: 'Проект был отозван',
+      body: `Извините, клиент отозвал проект ${project.title}`,
+    });
   }
 
   async cancelApproval(userId: string, projectId: string) {
@@ -258,7 +276,18 @@ export class ProjectService {
     if (project.status !== ProjectStatus.AWAITING_APPROVAL)
       throw new ForbiddenException('You can not cancel approval');
 
+    const project_with_freelancer = await this.projectRepo.findOne({
+      where: { id: projectId },
+      relations: ['freelancer'],
+    });
+
     project.status = ProjectStatus.IN_PROGRESS;
     await this.projectRepo.save(project);
+
+    this.eventEmitter.emit('notification.create', {
+      userId: project_with_freelancer?.freelancer.id,
+      title: 'Ваша заявка отклонена',
+      body: `Заказчик отклонил вашу заявку на подтверждение проекта ${project.title}, продолжайте работу`,
+    });
   }
 }

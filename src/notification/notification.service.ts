@@ -25,12 +25,14 @@ export class NotificationService {
   }
 
   emitNotificationEvent(dto: CreateNotificationDto) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     this.eventEmitter.emit('notification.create', dto);
   }
 
   async getUnreadNotifications(userId: string): Promise<Notification[]> {
-    return this.notifModel.find({ userId, isRead: false }).exec();
+    return this.notifModel
+      .find({ userId, isRead: false })
+      .sort({ createdAt: -1 })
+      .exec();
   }
 
   async findById(id: string): Promise<Notification | null> {
