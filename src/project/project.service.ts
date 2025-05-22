@@ -57,7 +57,7 @@ export class ProjectService {
     if (!category) throw new BadRequestException('Category not found');
     const project = this.projectRepo.create();
     project.title = dto.title;
-    project.descriprion = dto.description;
+    project.description = dto.description;
     project.price = parseFloat(dto.price);
     project.category = category;
     project.client = user;
@@ -80,14 +80,17 @@ export class ProjectService {
       });
       if (category) project.category = category;
     }
-    if (dto.description) project.descriprion = dto.description;
-    if (dto.price) project.price = dto.price;
+    if (dto.description) project.description = dto.description;
+    if (dto.price) project.price = parseFloat(dto.price);
     if (dto.title) project.title = dto.title;
     return await this.projectRepo.save(project);
   }
 
   async findById(projectId: string) {
-    return await this.projectRepo.findOne({ where: { id: projectId } });
+    return await this.projectRepo.findOne({
+      where: { id: projectId },
+      relations: ['client', 'freelancer', 'category'],
+    });
   }
 
   async findByUserId(userId: string) {
@@ -157,7 +160,14 @@ export class ProjectService {
 
     const findOpts: any = {
       relations: ['category'],
-      where: categories?.length ? { category: In(categories) } : {},
+      where: categories?.length
+        ? {
+            category: In(categories),
+            status: ProjectStatus.CREATED,
+          }
+        : {
+            status: ProjectStatus.CREATED,
+          },
       skip: offset,
       take: limit,
       order: {},

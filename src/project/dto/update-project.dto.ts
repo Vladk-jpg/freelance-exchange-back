@@ -1,8 +1,6 @@
 import {
   IsString,
   MinLength,
-  IsNumber,
-  IsPositive,
   Matches,
   IsUUID,
   IsOptional,
@@ -20,12 +18,10 @@ export class UpdateProjectDto {
   description?: string;
 
   @IsOptional()
-  @IsNumber({}, { message: 'Price must be a number' })
-  @IsPositive({ message: 'Price must be a positive number' })
   @Matches(/^\d+(\.\d{1,2})?$/, {
     message: 'Price must have at most two decimal places',
   })
-  price?: number;
+  price?: string;
 
   @IsOptional()
   @IsUUID()

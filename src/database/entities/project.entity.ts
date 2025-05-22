@@ -22,7 +22,7 @@ export class Project {
   title: string;
 
   @Column({ type: 'text' })
-  descriprion: string;
+  description: string;
 
   @Column({
     type: 'decimal',

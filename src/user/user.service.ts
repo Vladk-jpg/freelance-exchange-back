@@ -63,6 +63,7 @@ export class UserService {
     const user = await this.userRepo.findOne({ where: { id } });
     if (!user) return null;
     return new Profile(
+      user.id,
       user.username,
       user.email,
       user.role,
@@ -100,6 +101,7 @@ export class UserService {
 
     const newUser = await this.userRepo.save(user);
     return new Profile(
+      newUser.id,
       newUser.username,
       newUser.email,
       newUser.role,
@@ -112,6 +114,7 @@ export class UserService {
     const user = await this.findById(id);
     if (!user) throw new BadRequestException('User not found');
     const profile = new Profile(
+      user.id,
       user.username,
       user.email,
       user.role,
@@ -176,6 +179,7 @@ export class UserService {
 
     const updatedUser = await this.userRepo.save(user);
     return new Profile(
+      updatedUser.id,
       updatedUser.username,
       updatedUser.email,
       updatedUser.role,

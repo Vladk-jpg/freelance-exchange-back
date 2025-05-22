@@ -99,6 +99,7 @@ export class UserController {
     @UploadedFile() file: Express.Multer.File,
   ) {
     return await this.userService.uploadProfilePicture(
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       req.user.id as string,
       file.buffer,
       file.originalname,

@@ -58,7 +58,11 @@ export class ProposalService {
       throw new BadRequestException('Project is not available');
 
     const found = await this.propRepo.findOne({
-      where: { freelancer: { id: freelancer.id }, project: { id: project.id } },
+      where: {
+        freelancer: { id: freelancer.id },
+        project: { id: project.id },
+        status: ProposalStatus.PENDING,
+      },
       relations: ['freelancer', 'project'],
     });
     if (found) {
@@ -111,7 +115,7 @@ export class ProposalService {
   async findProposalsByProject(userId: string, projectId: string) {
     const project = await this.projectRepo.findOne({
       where: { id: projectId },
-      relations: ['client'],
+      relations: ['client', 'freelancer'],
     });
     if (!project) throw new NotFoundException('Project not found');
     if (project.client.id !== userId)

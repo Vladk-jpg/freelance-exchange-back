@@ -45,13 +45,6 @@ export class ProjectController {
     return await this.projectService.searchProjects(dto);
   }
 
-  @Get(':id')
-  async getProjectById(@Param('id', UUIDParam()) id: string) {
-    const res = await this.projectService.findById(id);
-    if (!res) throw new NotFoundException('Project with such id not found');
-    return res;
-  }
-
   @Get()
   async findAll(@Query() paginationDto: PaginationDto) {
     return await this.projectService.findAll(paginationDto);
@@ -60,6 +53,20 @@ export class ProjectController {
   @Get('user/:id')
   async getProjectsByUserId(@Param('id', UUIDParam()) id: string) {
     return await this.projectService.findByUserId(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('user')
+  async getMyProjects(@Req() req: any) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    return await this.projectService.findByUserId(req.user.id as string);
+  }
+
+  @Get(':id')
+  async getProjectById(@Param('id', UUIDParam()) id: string) {
+    const res = await this.projectService.findById(id);
+    if (!res) throw new NotFoundException('Project with such id not found');
+    return res;
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

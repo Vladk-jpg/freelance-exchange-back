@@ -7,6 +7,7 @@ import {
   Delete,
   UseGuards,
   Patch,
+  Req,
 } from '@nestjs/common';
 import { NotificationService } from './notification.service';
 import { CreateNotificationDto } from './dto/create-notification.dto';
@@ -23,9 +24,10 @@ export class NotificationController {
     return this.notificationService.createNotification(dto);
   }
 
-  @Get('unread/:userId')
-  async getUnreadNotifications(@Param('userId') userId: string) {
-    return this.notificationService.getUnreadNotifications(userId);
+  @Get()
+  async getUnreadNotifications(@Req() req: any) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
+    return this.notificationService.getUnreadNotifications(req.user.id);
   }
 
   @Delete(':id')
