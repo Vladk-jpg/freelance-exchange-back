@@ -20,6 +20,7 @@ import { Payment } from 'src/database/entities/payment.entity';
 import { PaymentStatus } from 'src/database/enums/payment-status.enum';
 import { Wallet } from 'src/database/entities/wallet.entity';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { UserStatus } from 'src/database/enums/user-status.enum';
 
 @Injectable()
 export class ProjectService {
@@ -66,7 +67,7 @@ export class ProjectService {
     this.eventEmitter.emit('notification.create', {
       userId: userId,
       title: 'New project created',
-      body: `Project ${project.title} created`,
+      content: `Project ${project.title} created`,
     });
 
     return saved;
@@ -155,18 +156,38 @@ export class ProjectService {
     const { categories, sortBy, offset = 0, limit = 10 } = dto;
 
     const total = await this.projectRepo.count({
-      where: categories?.length ? { category: In(categories) } : {},
-    });
-
-    const findOpts: any = {
-      relations: ['category'],
       where: categories?.length
         ? {
             category: In(categories),
             status: ProjectStatus.CREATED,
+            client: {
+              status: UserStatus.ACTIVE,
+            },
           }
         : {
             status: ProjectStatus.CREATED,
+            client: {
+              status: UserStatus.ACTIVE,
+            },
+          },
+      relations: ['client'],
+    });
+
+    const findOpts: any = {
+      relations: ['category', 'client'],
+      where: categories?.length
+        ? {
+            category: In(categories),
+            status: ProjectStatus.CREATED,
+            client: {
+              status: UserStatus.ACTIVE,
+            },
+          }
+        : {
+            status: ProjectStatus.CREATED,
+            client: {
+              status: UserStatus.ACTIVE,
+            },
           },
       skip: offset,
       take: limit,
@@ -209,7 +230,7 @@ export class ProjectService {
     this.eventEmitter.emit('notification.create', {
       userId: project.client.id,
       title: 'Проект нуждается в подтверждении',
-      body: `Фрилансер ${project.freelancer.username} хочет подтвердить выполнение проекта ${project.title}`,
+      content: `Фрилансер ${project.freelancer.username} хочет подтвердить выполнение проекта ${project.title}`,
     });
   }
 
@@ -230,7 +251,8 @@ export class ProjectService {
       relations: ['wallet'],
     });
     if (!freelancer) throw new BadRequestException('Freelancer not found');
-    freelancer.wallet.balance += project.price;
+    freelancer.wallet.balance +=
+      project.price - project.price * (payment.commission / 100);
     await this.walletRepo.save(freelancer.wallet);
 
     payment.status = PaymentStatus.COMPLITED;
@@ -242,7 +264,7 @@ export class ProjectService {
     this.eventEmitter.emit('notification.create', {
       userId: freelancer.id,
       title: 'Подтверждено',
-      body: `Ваша работа подтверждена! Проверьте ваш кошелек`,
+      content: `Ваша работа подтверждена! Проверьте ваш кошелек`,
     });
   }
 
@@ -277,7 +299,7 @@ export class ProjectService {
     this.eventEmitter.emit('notification.create', {
       userId: payment.recepientId,
       title: 'Проект был отозван',
-      body: `Извините, клиент отозвал проект ${project.title}`,
+      content: `Извините, клиент отозвал проект ${project.title}`,
     });
   }
 
@@ -297,7 +319,7 @@ export class ProjectService {
     this.eventEmitter.emit('notification.create', {
       userId: project_with_freelancer?.freelancer.id,
       title: 'Ваша заявка отклонена',
-      body: `Заказчик отклонил вашу заявку на подтверждение проекта ${project.title}, продолжайте работу`,
+      content: `Заказчик отклонил вашу заявку на подтверждение проекта ${project.title}, продолжайте работу`,
     });
   }
 }

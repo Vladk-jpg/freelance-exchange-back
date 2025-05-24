@@ -14,6 +14,7 @@ import { MinioModule } from './minio/minio.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { NotificationModule } from './notification/notification.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { PaymentModule } from './payment/payment.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     ReviewModule,
     MinioModule,
     NotificationModule,
+    PaymentModule,
   ],
 })
 export class AppModule {}

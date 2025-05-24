@@ -3,6 +3,7 @@ import {
   Body,
   Controller,
   Get,
+  Param,
   Post,
   Query,
   Req,
@@ -24,7 +25,7 @@ export class ReviewController {
   @Roles(UserRole.CLIENT)
   @Post()
   async createReview(
-    @Query('projectId', UUIDParam()) projectId: string,
+    @Query('projectId') projectId: string,
     @Req() req: any,
     @Body() dto: CreateReviewDto,
   ) {
@@ -33,12 +34,22 @@ export class ReviewController {
   }
 
   @Get(':id')
-  async getReview(@Query('id', UUIDParam()) id: string) {
+  async getReview(@Param('id', UUIDParam()) id: string) {
     return await this.reviewService.findReview(id);
   }
 
   @Get('user/:id')
-  async getUserReviews(@Query('id', UUIDParam()) id: string) {
+  async getUserReviews(@Param('id', UUIDParam()) id: string) {
     return await this.reviewService.findUserReviews(id);
+  }
+
+  @Get('project/:id')
+  async getProjectReview(@Param('id', UUIDParam()) id: string) {
+    return await this.reviewService.findReviewByProjectId(id);
+  }
+
+  @Get()
+  async getMyReviews(@Req() req: any) {
+    return await this.reviewService.findUserReviews(req.user.id as string);
   }
 }

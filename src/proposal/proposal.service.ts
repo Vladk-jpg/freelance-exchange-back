@@ -79,7 +79,7 @@ export class ProposalService {
     this.eventEmitter.emit('notification.create', {
       userId: project.client.id,
       title: 'Новая заявка!',
-      body: `Новая заявка на проект ${project.title}. Проверьте на страницу с проектом `,
+      content: `Новая заявка на проект ${project.title}. Проверьте на страницу с проектом `,
     });
 
     return await this.propRepo.save(proposal);
@@ -104,7 +104,7 @@ export class ProposalService {
   async findPropsByFreelancer(userId: string) {
     const proposals = await this.propRepo.find({
       where: { freelancer: { id: userId } },
-      relations: ['freelancer'],
+      relations: ['freelancer', 'project'],
     });
     return proposals.map((value: Partial<Proposal>) => {
       value.freelancer = undefined;
@@ -173,10 +173,22 @@ export class ProposalService {
     payment.amount = project.price;
     await this.paymentRepo.save(payment);
 
+    const proposals = await this.propRepo.find({
+      where: { project: { id: project.id } },
+      relations: ['project'],
+    });
+
+    for (const prop of proposals) {
+      if (prop.id === proposal.id) continue;
+
+      prop.status = ProposalStatus.REJECTED;
+      await this.propRepo.save(prop);
+    }
+
     this.eventEmitter.emit('notification.create', {
       userId: proposal.freelancer.id,
       title: 'Заявка одобрена',
-      body: `Ваша заявка на преокт ${project.title} одобрена! Можете приступать к работе в течении 24 часов`,
+      content: `Ваша заявка на преокт ${project.title} одобрена! Можете приступать к работе в течении 24 часов`,
     });
   }
 
@@ -201,7 +213,7 @@ export class ProposalService {
     this.eventEmitter.emit('notification.create', {
       userId: proposal.freelancer.id,
       title: 'Заявка отказана',
-      body: `Вашей заявкае на преокт ${project.title} отказано`,
+      content: `Вашей заявкае на преокт ${project.title} отказано`,
     });
   }
 

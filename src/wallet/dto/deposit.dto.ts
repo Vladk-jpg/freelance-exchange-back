@@ -1,7 +1,6 @@
-import { IsCreditCard, IsNumber, IsPositive, Matches } from 'class-validator';
+import { IsNumber, IsPositive, Matches } from 'class-validator';
 
 export class DepositDto {
-  @IsCreditCard()
   cardNumber: string;
 
   @Matches(/^(0[1-9]|1[0-2])\/\d{2}$/, {

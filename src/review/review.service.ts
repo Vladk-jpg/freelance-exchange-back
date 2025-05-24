@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -27,6 +28,8 @@ export class ReviewService {
     projectId: string,
     dto: CreateReviewDto,
   ) {
+    if (!projectId)
+      throw new NotFoundException('Can not found project with such id');
     const review = this.reviewRepo.create();
     const project = await this.projectRepo.findOne({
       where: { id: projectId },
@@ -35,8 +38,14 @@ export class ReviewService {
     if (!project) throw new NotFoundException('Project not found');
     if (project.status !== ProjectStatus.COMPLETED)
       throw new ForbiddenException(
-        'You can only Freelancer with completed project',
+        'You can only review freelancer with completed project',
       );
+    const isFound = await this.reviewRepo.findOne({
+      where: { project: { id: projectId } },
+      relations: ['project'],
+    });
+    if (isFound)
+      throw new BadRequestException('You can not add another review');
 
     const recepient = await this.userRepo.findOne({
       where: { id: project.freelancer.id },
@@ -47,13 +56,14 @@ export class ReviewService {
     review.rating = dto.rating;
     review.senderId = senderId;
     review.recepient = recepient;
+    review.project = project;
     return await this.reviewRepo.save(review);
   }
 
   async findReview(id: string) {
     const review = await this.reviewRepo.findOne({
       where: { id },
-      relations: ['recepient'],
+      relations: ['recepient', 'project'],
     });
     if (!review) throw new NotFoundException('Review not found');
     return review;
@@ -61,9 +71,18 @@ export class ReviewService {
 
   async findUserReviews(userId: string) {
     const reviews = await this.reviewRepo.find({
-      where: { senderId: userId },
-      relations: ['recepient'],
+      where: { recepient: { id: userId } },
+      relations: ['recepient', 'project'],
     });
     return reviews;
+  }
+
+  async findReviewByProjectId(projectId: string) {
+    const review = await this.reviewRepo.findOne({
+      where: { project: { id: projectId } },
+      relations: ['recepient', 'project'],
+    });
+    if (!review) throw new NotFoundException('Review not found');
+    return review;
   }
 }

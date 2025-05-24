@@ -40,7 +40,7 @@ export class Payment {
       to: (value: number) => value,
       from: (value: string) => parseFloat(value),
     },
-    default: 0,
+    default: 10,
   })
   commission: number;
 

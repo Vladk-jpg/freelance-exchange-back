@@ -1,5 +1,5 @@
 export enum PaymentStatus {
   RESERVED = 'RESERVED',
-  COMPLITED = 'COMPLITED',
+  COMPLITED = 'COMPLETED',
   REFUNDED = 'REFUNDED',
 }
